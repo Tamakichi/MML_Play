@@ -3,8 +3,6 @@
 //
 
 #include "MML.h"
-
-#define c_putch(c) Serial.write(c)
 #define isBreak()  (false)
 
 // note定義
@@ -42,6 +40,8 @@ const uint8_t mml_scaleBase[] = {
 };
 
 void MML::init() {
+  playduration = 0;
+  flgdbug = 0;      // デバッグフラグ
   if (func_init != 0)
     func_init();
 }
@@ -51,18 +51,37 @@ void MML::init() {
 // tm     音出し時間
 // vol    音出し時間
 void MML::tone(int16_t freq, int16_t tm,int16_t vol) {
-  //dev_tone(freq, tm, vol);
   if (func_tone != 0) 
     func_tone(freq, tm, vol);
 }
 
 //　NOTONE
 void MML::notone() {
-  //dev_notone()
   if (func_notone != 0)
     func_notone();
 }
 
+// 1文字出力
+void  MML::debug(uint8_t c) {
+  if (func_putc != 0)
+    func_putc(c);
+}
+
+//  演奏中判定
+uint8_t MML::isPlay() {
+  if (playduration) {
+    if ( endTick < millis() ) {
+        if (!flgR) notone();
+        playduration = 0;
+        endTick = 0;
+        return 0;
+    } else {
+      return 1;
+    }
+  }
+  return 0;
+}
+    
 // TEMPO テンポ
 void MML::tempo(int16_t tempo) {
   if ( (tempo < MML_MIN_TMPO) || (tempo > MML_MAX_TMPO) ) 
@@ -71,40 +90,51 @@ void MML::tempo(int16_t tempo) {
 }
 
 // 長さ引数の評価
-//  引数 
-//   ptr(IN)  : 対象文字列格納アドレス
-//   len(OUT) : 評価した長さ
-//              正常  0,1,2,4,8,16,32,64 (0は長さ指定なし)
-//              異常  -1 (数値エラー)
+int16_t MML::getParamLen() {
+  int16_t tmpLen = getParam();
+  if (tmpLen == -1)
+    tmpLen = 0;
+  else if (!((tmpLen==1)||(tmpLen==2)||(tmpLen==4)||(tmpLen==8)||
+          (tmpLen==16)||(tmpLen==32)||(tmpLen==64)) ) {
+    // 長さ指定エラー
+    tmpLen = -1;
+    err = ERR_MML; 
+  }
+  return tmpLen;
+}
+
+// 引数の評価
 //  戻り値
-//   次の文字列へのポインタ
-//
-const char* MML::getParamLen(const char *ptr, int16_t& len) {
-  int16_t tmpLen = 0;
-  const char* tmpPtr = ptr;
-  while(isdigit(*ptr)) {
-     if (flgdbug) c_putch(*ptr); // デバッグ
-     tmpLen*= 10;
-     tmpLen+= *ptr - '0';
-     ptr++;
+//   引数なし -1 引数あり 0以上
+int16_t MML::getParam() {
+  int16_t tmpParam = 0;
+  char* tmpPtr = mml_ptr;
+  while(isdigit(*mml_ptr)) {
+     if (flgdbug) debug(*mml_ptr); // デバッグ
+     tmpParam*= 10;
+     tmpParam+= *mml_ptr - '0';
+     mml_ptr++;
   }
-  if (tmpPtr != ptr) {
-    // 長さ引数ありの場合、長さを評価
-    if ( !((tmpLen==1)||(tmpLen==2)||(tmpLen==4)||(tmpLen==8)||
-         (tmpLen==16)||(tmpLen==32)||(tmpLen==64)) ) {
-      // 長さ指定エラー
-      tmpLen = -1;
-      err = ERR_MML; 
-    }
+  if (tmpPtr == mml_ptr) {
+    tmpParam = -1;
   }
-  len = tmpLen;
-  return ptr;
+  return tmpParam;
+}
+
+// 演奏開始
+// 引数
+//  mode  0ビット  0:フォアグランド演奏、1:バックグラウンド演奏
+//        1ビット  0:先頭から            1:中断途中から
+//        2ビット  0:リピートなし        1:リピートあり (バックグラウンド演奏時のみ）
+void MML::play(uint8_t mode) {  
+  if (!(mode & 2))  mml_ptr = mml_text;         // 先頭からの演奏
+  repeat =  ((mode & 4) && (mode & 1)) ? 1:0;   // リピートモード
+  if ( !(mode & 1) ) playTick(0);               // フォアグランド演奏
 }
 
 // PLAY 文字列
-const char*  MML::play(const char* ptr, uint8_t flgTick) {
+void MML::playTick(uint8_t flgTick) {
   uint16_t freq;                     // 周波数
-  flgdbug = 0;                       // デバッグフラグ
   uint16_t local_len = common_len ;  // 個別長さ
   uint8_t  local_oct = common_oct ;  // 個別高さ
   
@@ -115,9 +145,8 @@ const char*  MML::play(const char* ptr, uint8_t flgTick) {
   int16_t tmpLen;                    // 音の長さ評価用
 
   // MMLの評価
-  while(*ptr) {
-    if (flgdbug) c_putch(*ptr); // デバッグ
-    
+  while(*mml_ptr) {
+    if (flgdbug) debug(*mml_ptr); // デバッグ
     flgExtlen = 0;
     local_len = common_len;
     local_oct = common_oct;
@@ -126,35 +155,36 @@ const char*  MML::play(const char* ptr, uint8_t flgTick) {
     if (isBreak()) {
       err = 0; 
       break;
-      //return;
     }
     
     // 空白はスキップ    
-    if (*ptr == ' '|| *ptr == '&') {
-      ptr++;
+    if (*mml_ptr == ' '|| *mml_ptr == '&') {
+      mml_ptr++;
       continue;
     }
 
     // デバッグコマンド
-    if (*ptr == '?') {
-      flgdbug = 1;
-      ptr++;
+    if (*mml_ptr == '?') {
+      if (flgdbug) 
+        flgdbug = 0;
+      else 
+        flgdbug = 1;
+      mml_ptr++;
       continue;
     }   
 
-     c = toUpperCase(*ptr);
-    if ( ((c >= 'A') && (c <= 'G')) || (c == 'R') ) {
-      //**** 音階記号 A - Z,R 
-      uint8_t flgR = 0;
+     c = toUpperCase(*mml_ptr);
+    if ( ((c >= 'A') && (c <= 'G')) || (c == 'R') ) {  //**** 音階記号 A - Z,R 
+      flgR = 0;
       if (c == 'R') {
         flgR = 1;
-        ptr++;
+        mml_ptr++;
       } else {
         scale = pgm_read_byte(&mml_scaleBase[c-'A']); // 音階コードの取得        
-        ptr++;
-        if (*ptr == '#' || *ptr == '+') {
+        mml_ptr++;
+        if (*mml_ptr == '#' || *mml_ptr == '+') {
           //** 個別の音階半音上げ # or +
-          if (flgdbug) c_putch(*ptr); // デバッグ
+          if (flgdbug) debug(*mml_ptr); // デバッグ
           // 半音上げる
           if (scale < MML_B_BASE) {
             scale++;
@@ -164,10 +194,10 @@ const char*  MML::play(const char* ptr, uint8_t flgTick) {
               local_oct++;
             }
           }
-          ptr++;        
-        } else if (*ptr == '-') {
+          mml_ptr++;        
+        } else if (*mml_ptr == '-') {
           //** 個別の音階半音下げ # or +
-          if (flgdbug) c_putch(*ptr); // デバッグ
+          if (flgdbug) debug(*mml_ptr); // デバッグ
           // 半音下げる
           if (scale > MML_C_BASE) {
             scale--;
@@ -177,24 +207,21 @@ const char*  MML::play(const char* ptr, uint8_t flgTick) {
               local_oct--;
             }
           }                
-          ptr++;      
+          mml_ptr++;      
         } 
       }
       
       //** 個別の長さの指定 
-      ptr = getParamLen(ptr, tmpLen);
-      if (tmpLen < 0) {
-        //return;
-        err = ERR_MML; 
+      if ( (tmpLen = getParamLen() ) < 0)
         break;
-      } else if (tmpLen > 0) {
+      if (tmpLen > 0) {
         local_len = tmpLen;
       }
       
       //** 半音伸ばし
-      if (*ptr == '.') {
-        if (flgdbug) c_putch(*ptr); // デバッグ
-        ptr++;
+      if (*mml_ptr == '.') {
+        if (flgdbug) debug(*mml_ptr); // デバッグ
+        mml_ptr++;
         flgExtlen = 1;
       } 
 
@@ -225,58 +252,42 @@ const char*  MML::play(const char* ptr, uint8_t flgTick) {
       }
       
     } else if (c == 'L') {  // グローバルな長さの指定     
-      //**** 省略時長さ指定 L[n][.] ***********************************************
-      ptr++;
-      ptr = getParamLen(ptr, tmpLen);
-      if (tmpLen < 0) {
-        //return;
-        err = ERR_MML; 
+      //**** 省略時長さ指定 L[n][.] 
+      mml_ptr++;
+      //mml_ptr = getParamLen(mml_ptr, tmpLen);
+      if ( (tmpLen = getParamLen() ) < 0)
         break;
-      } else if (tmpLen > 0) {
+      if (tmpLen > 0) {
         local_len = tmpLen;
         common_len = tmpLen;
-      
+        
         //** 半音伸ばし
-        if (*ptr == '.') {
-         if (flgdbug) c_putch(*ptr); // デバッグ
-          ptr++;
-          common_len += common_len>>1;
-          local_len =  common_len;
+        if (*mml_ptr == '.') {
+           if (flgdbug) debug(*mml_ptr); // デバッグ
+            mml_ptr++;
+            common_len += common_len>>1;
+            local_len =  common_len;
         } 
       } else {
         // 引数省略時は、デフォルトを設定する
         common_len = MML_len;
         local_len =  MML_len;              
       }
-    //**** ボリューム指定 Vn ***********************************************
+    //**** ボリューム指定 Vn 
     } else if (c == 'V') {  // グローバルなボリュームの指定     
-      ptr++;
-      uint16_t tmpVol =0;
-      while(isdigit(*ptr)) {
-         if (flgdbug) c_putch(*ptr); // デバッグ
-         tmpVol*= 10;
-         tmpVol+= *ptr - '0';
-         ptr++;
-      }
+      mml_ptr++;
+      uint16_t tmpVol = getParam();
       if (tmpVol < 0 || tmpVol > MML_MAX_VOL) {
         err = ERR_MML; 
-        //return;
         break;
       }
       common_vol = tmpVol;     
-    //**** 音の高さ指定 On ***********************************************
+    //**** 音の高さ指定 On 
     } else if (c == 'O') { // グローバルなオクターブの指定
-      ptr++;
-      uint16_t tmpOct =0;
-      while(isdigit(*ptr)) {
-         if (flgdbug) c_putch(*ptr); // デバッグ
-         tmpOct*= 10;
-         tmpOct+= *ptr - '0';
-         ptr++;
-      }
+      mml_ptr++;
+      uint16_t tmpOct = getParam();
       if (tmpOct < 1 || tmpOct > MML_MAX_OCT) {
         err = ERR_MML; 
-        //return;
         break;
       }
       common_oct = tmpOct;
@@ -285,40 +296,27 @@ const char*  MML::play(const char* ptr, uint8_t flgTick) {
       if (common_oct < MML_MAX_OCT) {
         common_oct++;
       }
-      ptr++;
-    //**** 1オクターブ下げる < ***********************************************
+      mml_ptr++;
+    //**** 1オクターブ下げる < 
     } else if (c == '<') { // グローバルな1オクターブ下げる
       if (common_oct > 1) {
         common_oct--;
       }
-      ptr++;
-    //**** テンポ指定 Tn ***********************************************
+      mml_ptr++;
+    //**** テンポ指定 Tn 
     } else if (c == 'T') { // グローバルなテンポの指定
-      ptr++;      
+      mml_ptr++;      
       //** 長さの指定
-      uint32_t tmpTempo =0;
-      const char* tmpPtr = ptr;
-      while(isdigit(*ptr)) {
-        if (flgdbug) c_putch(*ptr); // デバッグ
-         tmpTempo*= 10;
-         tmpTempo+= *ptr - '0';
-         ptr++;
-      }
-      if (tmpPtr == ptr) {
-        err = ERR_MML; 
-        //return;
-        break;
-      }
+      uint32_t tmpTempo = getParam();
       if (tmpTempo < MML_MIN_TMPO || tmpTempo > MML_MAX_TMPO) {
         err = ERR_MML; 
-        return 0;                
+        break;               
       }
       common_tempo = tmpTempo;      
     } else {
       err = ERR_MML; 
-      //return;
       break;
     }
   }
-  return ptr;
+  return;
 }
