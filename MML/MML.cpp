@@ -67,19 +67,19 @@ void  MML::debug(uint8_t c) {
     func_putc(c);
 }
 
-//  演奏中判定
-uint8_t MML::isPlay() {
+//  演奏キューチェック
+uint8_t MML::available() {
   if (playduration) {
     if ( endTick < millis() ) {
         if (!flgR) notone();
         playduration = 0;
         endTick = 0;
-        return 0;
+        return 1;
     } else {
-      return 1;
+      return 0;
     }
   }
-  return 0;
+  return 1;
 }
     
 // TEMPO テンポ
@@ -130,6 +130,7 @@ void MML::play(uint8_t mode) {
   if (!(mode & 2))  mml_ptr = mml_text;         // 先頭からの演奏
   repeat =  ((mode & 4) && (mode & 1)) ? 1:0;   // リピートモード
   if ( !(mode & 1) ) playTick(0);               // フォアグランド演奏
+  flgRun = 1;
 }
 
 // PLAY 文字列
@@ -318,5 +319,7 @@ void MML::playTick(uint8_t flgTick) {
       break;
     }
   }
-  return;
+  if ( !*mml_ptr && available() ) {
+    flgRun = 0; // 演奏終了
+  }
 }

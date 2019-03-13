@@ -37,10 +37,11 @@ class MML {
     uint8_t   flgR = 0;                     // 休符演奏フラグ
     uint32_t  endTick = 0;                  // 再生終了システム時間（ミリ秒）
     uint32_t  repeat  = 0;                  // 繰り返し演奏
+    uint8_t   flgRun;                       // 実行中状態
 
-    void  (*func_tone)(uint16_t freq, uint16_t tm, uint16_t vol) = 0;
-    void  (*func_notone)(void) = 0;
-    void  (*func_init)(void) = 0;
+    void (*func_tone)(uint16_t freq, uint16_t tm, uint16_t vol) = 0;
+    void (*func_notone)(void) = 0;
+    void (*func_init)(void) = 0;
     void (*func_putc)(uint8_t c) = 0;
   
   private:
@@ -72,8 +73,11 @@ class MML {
 
     void playTick(uint8_t flgTick = 1);
     void play(uint8_t mode = 0);
-    uint8_t isPlay();
-
+    void playBGM() {play(1);};
+    uint8_t isPlay()  {return flgRun; };
+    uint8_t available(); 
+    void stop() { notone(); flgRun = 0;};
+    void resume() {if (*mml_text) flgRun = 1; };
 };
 
 #endif
