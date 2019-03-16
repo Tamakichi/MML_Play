@@ -1,8 +1,10 @@
-#include "TimerEvent.h"
+//
+// file : TimerEvent.h
+// タイマーイベントライブラリ
+// 作成日 2019/03/16 by たま吉さん
+// 
 
-void TimerEvent::init() {
-  pTimer->pause();                   // タイマー停止
-}
+#include "TimerEvent.h"
 
 // ハンドラの設定
 // 引数
@@ -32,14 +34,20 @@ int16_t TimerEvent::start() {
   return 0;
 }
 
-// タイマー停止
-void TimerEvent::stop() { 
-    pTimer->pause();                 
-    flgRun = 0; 
-}
-
-// タイマ再開
-void TimerEvent::resume() { 
-  pTimer->resume();
-  flgRun = 1;
+// 割り込み優先度の設定
+// priority 0 ～ 15
+void TimerEvent::setPriority(uint8_t priority) {
+  nvic_irq_num irqn; 
+  if (pTimer == &Timer1) {
+    irqn = NVIC_TIMER1_UP_TIMER10;
+  } else if (pTimer == &Timer2) {
+    irqn = NVIC_TIMER2;
+  } else if (pTimer == &Timer3) {
+    irqn = NVIC_TIMER3;
+  } else if (pTimer == &Timer4) {    
+    irqn = NVIC_TIMER4;
+  } else {
+    return;
+  }
+  nvic_irq_set_priority(irqn, priority); 
 }

@@ -129,7 +129,12 @@ int16_t MML::getParam() {
 void MML::play(uint8_t mode) {  
   if (!(mode & 2))  mml_ptr = mml_text;         // 先頭からの演奏
   repeat =  ((mode & 4) && (mode & 1)) ? 1:0;   // リピートモード
-  if ( !(mode & 1) ) playTick(0);               // フォアグランド演奏
+  if ( !(mode & 1) ) {
+    playTick(0);  // フォアグランド演奏
+    playMode = 1;
+  } else {
+    playMode = 2; // バックグランド演奏
+  }
   flgRun = 1;
 }
 
@@ -320,6 +325,7 @@ void MML::playTick(uint8_t flgTick) {
     }
   }
   if ( !*mml_ptr && available() ) {
-    flgRun = 0; // 演奏終了
+    flgRun = 0;    // 演奏終了
+    playMode = 0;
   }
 }
