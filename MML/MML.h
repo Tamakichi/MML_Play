@@ -1,5 +1,6 @@
 //
 // MMLクラスライブラリ V1.0
+// 作成日 2019/03/24 by たま吉さん
 //
 
 #ifndef ___MML_h___
@@ -37,8 +38,8 @@ class MML {
     uint8_t   flgR = 0;                     // 休符演奏フラグ
     uint32_t  endTick = 0;                  // 再生終了システム時間（ミリ秒）
     uint32_t  repeat  = 0;                  // 繰り返し演奏
-    uint8_t   flgRun;                       // 実行中状態
-    uint8_t   playMode = 0;                 // 演奏状態 0:停止 1:フォアグランド演奏 2:バックグラウンド演奏
+    volatile uint8_t   flgRun;              // 実行中状態
+    volatile uint8_t   playMode = 0;        // 演奏状態 0:停止 1:フォアグランド演奏 2:バックグラウンド演奏
 
     void (*func_tone)(uint16_t freq, uint16_t tm, uint16_t vol) = 0;
     void (*func_notone)(void) = 0;
@@ -75,7 +76,8 @@ class MML {
     void playTick(uint8_t flgTick = 1);
     void play(uint8_t mode = 0);
     void playBGM() {play(1);};
-    uint8_t isBGMPlay()  {return (playMode == 2 && flgRun); };
+    uint8_t isBGMPlay()  {return ((playMode == 2) && flgRun); };
+    uint8_t isPlay()  {return ((playMode == 1) && flgRun); };
     uint8_t available(); 
     void stop() { notone(); flgRun = 0;};
     void resume() {if (*mml_text) flgRun = 1; };

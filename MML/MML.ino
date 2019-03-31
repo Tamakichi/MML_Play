@@ -1,8 +1,6 @@
 //
 // MML演奏サンプル
-//  要検証：フォアグランド演奏中にバックグラウンド演奏を実行しようとした場合の問題点
-//          バックグラウンド演奏中にフォアグランド演奏を実行しようとした場合の問題点
-//          フォアグランド演奏、バックグラウンド演奏、停止の状態を知りたい
+//
 
 #include "MML.h"
 #include "sound.h"
@@ -36,26 +34,43 @@ void debug(uint8_t c) {
   Serial.write(c);
 }
 
+// フォアグランド演奏の停止
+void OnStopPkay() {
+  if (mml.isPlay()) {
+    mml.stop();
+    Serial.println("Stop foreground playing");
+  }
+}
+
 void setup() {
   Serial.begin(115200);
+
+  // フォアグランド演奏停止用ボタンの設定
+  pinMode(PB8,INPUT_PULLUP);
+  attachInterrupt(PB8, OnStopPkay, FALLING);
+    
   // キーボード入力待ち
   while (!Serial.available())
     continue;
-  Serial.println("Start.");
   
   // MML初期化、デバイス依存関数の登録
   mml.init(dev_toneInit, dev_tone, dev_notone, debug); 
 
   // タイマー割り込み設定
   ticker.set(10, handle_timer);
+  ticker.setPriority(14);
   ticker.start();
 
   // フォアグランド演奏
+  Serial.println("Now foreground playing ..");
   mml.setText(mmltext);
   mml.play();
+  detachInterrupt(PB8);
+  delay(1000);
 
   // バックグラウンド演奏 
-  Serial.println("e:end r:resume s:start"); 
+  Serial.println("Now Background playing ..");
+  Serial.println("Menu: e:end, r:resume,  s:start"); 
   mml.playBGM();
 }
 

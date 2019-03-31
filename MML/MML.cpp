@@ -1,9 +1,10 @@
 //
 // MMLクラスライブラリ V1.0
+// 作成日 2019/03/24 by たま吉さん
 //
 
 #include "MML.h"
-#define isBreak()  (false)
+//#define isBreak()  (false)
 
 // note定義
 const PROGMEM  uint16_t mml_scale[] = {
@@ -130,12 +131,13 @@ void MML::play(uint8_t mode) {
   if (!(mode & 2))  mml_ptr = mml_text;         // 先頭からの演奏
   repeat =  ((mode & 4) && (mode & 1)) ? 1:0;   // リピートモード
   if ( !(mode & 1) ) {
-    playTick(0);  // フォアグランド演奏
     playMode = 1;
+    flgRun = 1;
+    playTick(0);  // フォアグランド演奏
   } else {
+    flgRun = 1;
     playMode = 2; // バックグランド演奏
   }
-  flgRun = 1;
 }
 
 // PLAY 文字列
@@ -156,13 +158,13 @@ void MML::playTick(uint8_t flgTick) {
     flgExtlen = 0;
     local_len = common_len;
     local_oct = common_oct;
-    
-    //強制的な中断の判定
-    if (isBreak()) {
+
+    // 中断の判定
+    if (!flgRun) {
       err = 0; 
       break;
     }
-    
+  
     // 空白はスキップ    
     if (*mml_ptr == ' '|| *mml_ptr == '&') {
       mml_ptr++;
