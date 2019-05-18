@@ -55,7 +55,7 @@ void debug(uint8_t c) {
 }
 
 // フォアグランド演奏の停止
-void OnStopPkay() {
+void OnStopkey() {
   if (mml.isPlay()) {
     mml.stop();
     Serial.println("Stop foreground playing");
@@ -66,8 +66,8 @@ void setup() {
   Serial.begin(115200);
 
   // フォアグランド演奏停止用ボタンの設定
-  pinMode(PB8,INPUT_PULLUP);
-  attachInterrupt(PB8, OnStopPkay, FALLING);
+  pinMode(StopBtn,INPUT_PULLUP);
+  attachInterrupt(StopBtn, OnStopkey, FALLING);
 
   Serial.println("MML library sample. Hit any key to start.");    
       
@@ -82,7 +82,7 @@ void setup() {
   Serial.println("Now foreground playing ..");
   mml.setText(mmltext);
   mml.play();
-  detachInterrupt(PB8);
+  detachInterrupt(StopBtn);
 
   // タイマー割り込み設定
   ticker.set(10, handle_timer);

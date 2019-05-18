@@ -5,8 +5,9 @@
 #include <TimerOne.h>
 #include "MML.h"
 
-#define   TonePin 8 // 圧電スピーカー接続ピン
-#define   StopBtn 3 // フォアグランド演奏中断ボタン
+#define   TonePin     8 // 圧電スピーカー接続ピン
+#define   StopBtn     2 // フォアグランド演奏中断ボタン
+#define   StopBtnInt0 0 // フォアグランド演奏中断ボタンの割り込み番号
 
 MML mml;             // MML文演奏管理
 
@@ -16,7 +17,7 @@ void dev_toneInit() {
 
 // 単音出力関数
 void dev_tone(uint16_t freq, uint16_t tm, uint16_t vol) {
-  tone(TonePin,freq);
+  tone(TonePin, freq);
   if (tm) {
     delay(tm);
     noTone(TonePin);
@@ -54,7 +55,7 @@ void debug(uint8_t c) {
 }
 
 // フォアグランド演奏の停止
-void OnStopPkay() {
+void OnStopkey() {
   if (mml.isPlay()) {
     mml.stop();
     Serial.println("Stop foreground playing");
@@ -63,11 +64,10 @@ void OnStopPkay() {
 
 void setup() {
   Serial.begin(115200);
-  pinMode(13, OUTPUT);
 
   // フォアグランド演奏停止用ボタンの設定
   pinMode(StopBtn,INPUT_PULLUP);
-  attachInterrupt(StopBtn, OnStopPkay, FALLING);
+  attachInterrupt(StopBtnInt0, OnStopkey, FALLING);
   
   Serial.println("MML library sample. Hit any key to start.");    
   
