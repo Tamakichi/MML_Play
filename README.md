@@ -86,42 +86,6 @@ MML
 `func_debug`はデバッグ出力関数へのポインタです。引数`c`はMML文処理時の文字数が  
 渡されます。本関数の登録は省略可能です。  
 
-【記述例】  
-Arduinoの`tone()`、`notone()`関数を使った単音出力初期化実装例  
-
-```CPP:sample.cpp
-#define   TonePin 8
-MML mml;
-
-
-// デバイス初期化関数
-void dev_init() {
-
-}
-
-// 単音出力関数
-void dev_tone(uint16_t freq, uint16_t tm, uint16_t vol) {
-  tone(TonePin,freq);
-  if (tm) {
-    delay(tm);
-    noTone(TonePin);
-  }
-}
-
-// 単音出力停止関数
-void dev_notone() {
-    noTone(TonePin);
-}
-
-// デバッグ出力関数
-void dev_debug(uint8_t c) {
-    Serial.write(c);
-}
-
-// MML初期化、デバイス依存関数の登録
-mml.init(dev_init, dev_tone, dev_notone, dev_debug);  
-```
-
 #### ■ MML文の登録
 
 【書式】  
@@ -180,30 +144,6 @@ PLAYコマンド事に指定する必要があります。
 - 空白文字  
 何もせずスキップします。
 
-【記述例】  
-
-```CPP:sample.cpp
-const char * mmltext =
-  "O6t180v15l16d+c+r8f+rf+rd+c+r8f+rf+rd+c+l8rf+r"
-  "f+rl16frfrd+c+r8frfrd+c+r8frfrd+c+l8"
-  "rfrfrl16f+rf+rd+c+r8f+rf+rd+c+r8f+r"
-  "f+rd+c+l8rf+rf+rl16frfrd+c+r8frfrd+c+r8fr"
-  "frd+c+l8rfrfrl16f+rf+rd+c+l8rf+rf+rf+r"
-  "f+rf+rf+rl16frfrd+c+l8rfrfrfrfrfrfrl16"
-  "f+rf+rd+c+r8f+rf+rd+c+r8f+rf+rd+c+l8r"
-  "f+rf+rl16frfrd+c+r8frfrd+c+r8frfrd+c+l8"
-  "rfrfrl16f+rf+r8.f+rc+c+d8c+8.frf+"
-  ;
-
-MML mml;  
-<中略>
-void setup() {
-    <中略>
-    mml.setText(mmltext);
-    <中略>
-}
-```
-
 #### ■ 演奏テンポの設定
 
 【書式】  
@@ -257,58 +197,6 @@ mml.tempo(150);
 引数`flgTick`に`true`を指定している場合は、１音演奏完了待ちを行いません。  
 この場合、演奏完了を待たずに即時復帰します。  
 次の音を演奏する場合は`available()`関数にて演奏状態をチェックしてから演奏します。  
-
-【記述例】  
-
-```CPP:sample.cpp
-#include "MML.h"
-
-// 猫ふんじゃった
-const char * mmltext =
-  "O6t180v15l16d+c+r8f+rf+rd+c+r8f+rf+rd+c+l8rf+r"
-  "f+rl16frfrd+c+r8frfrd+c+r8frfrd+c+l8"
-  "rfrfrl16f+rf+rd+c+r8f+rf+rd+c+r8f+r"
-  "f+rd+c+l8rf+rf+rl16frfrd+c+r8frfrd+c+r8fr"
-  "frd+c+l8rfrfrl16f+rf+rd+c+l8rf+rf+rf+r"
-  "f+rf+rf+rl16frfrd+c+l8rfrfrfrfrfrfrl16"
-  "f+rf+rd+c+r8f+rf+rd+c+r8f+rf+rd+c+l8r"
-  "f+rf+rl16frfrd+c+r8frfrd+c+r8frfrd+c+l8"
-  "rfrfrl16f+rf+r8.f+rc+c+d8c+8.frf+"
-  ;
-
-// デバイス初期化関数
-void dev_init() { }
-
-// 単音出力関数
-void dev_tone(uint16_t freq, uint16_t tm, uint16_t vol) {
-  tone(TonePin,freq);
-  if (tm) {
-    delay(tm);
-    noTone(TonePin);
-  }
-}
-
-// 単音出力停止関数
-void dev_notone() {
-    notone();
-}
-
-void setup() {
-    MML mml;
-    mml.init(dev_toneInit, dev_tone, dev_notone);
-    mml.setText(mmltext);
-    mml.playBGM();
-
-    // 1音づつ再生
-    while(mml.isBGMPlay()) {
-        if (mml.available()) {
-        mml.playTick();
-        }
-    }
-}
-
-void loop() {}
-```
 
 #### ■ MML文の演奏開始
 
@@ -685,6 +573,6 @@ void loop() {
 
 #### MML_Play_STM32Ex.ino
 
-Blue Pillボード（STM32F103C8T6搭載)用のサンプルプログラムです。
-Arduino Uno版と同等の機能ですが、tone()関数は音の大きさ指定対応のものに置き換えています。  
+Blue Pillボード（STM32F103C8T6搭載)用のサンプルプログラムです。  
+Arduino Uno版と同等の機能ですが、tone()関数は音の大きさ指定対応版に置き換えています。  
 詳細については、スケッチを参照して下さい。  
