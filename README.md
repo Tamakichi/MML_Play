@@ -101,7 +101,11 @@ void dev_init() {
 
 // 単音出力関数
 void dev_tone(uint16_t freq, uint16_t tm, uint16_t vol) {
-    tone(TonePin,freq,tm);
+  tone(TonePin,freq);
+  if (tm) {
+    delay(tm);
+    noTone(TonePin);
+  }
 }
 
 // 単音出力停止関数
@@ -277,7 +281,11 @@ void dev_init() { }
 
 // 単音出力関数
 void dev_tone(uint16_t freq, uint16_t tm, uint16_t vol) {
-    tone(freq,tm);
+  tone(TonePin,freq);
+  if (tm) {
+    delay(tm);
+    noTone(TonePin);
+  }
 }
 
 // 単音出力停止関数
