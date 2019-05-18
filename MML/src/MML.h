@@ -1,6 +1,7 @@
 //
 // MMLクラスライブラリ V1.0
 // 作成日 2019/03/24 by たま吉さん
+// 最終更新日 2019/05/16 by たま吉さん
 //
 
 #ifndef ___MML_h___
@@ -22,6 +23,11 @@
 #define MML_MAX_OCT  8    // 音の高さ(1～8)
 #define MML_MAX_TMPO 255  //  テンポ(32～255)
 #define MML_MIN_TMPO 32   //  テンポ(32～255)
+
+// 演奏モード(play()の引数)
+#define MML_BGM         0b001  // バックグラウンド演奏
+#define MML_RESUME      0b010  // 中断位置から演奏
+#define MML_REPEAT      0b100  // 繰り返し演奏
 
 class MML {
   private:
@@ -47,14 +53,16 @@ class MML {
     void (*func_putc)(uint8_t c) = 0;
   
   private:
-    int16_t getParamLen();
+	  int16_t getParamLen();
     int16_t getParam();
     void tone(int16_t freq, int16_t tm = 0,int16_t vol=15);
     void notone();
     void debug(uint8_t c);
+    void init();   
 
   public:
     // ハードウェア依存関数のアタッチ
+/*
     void  attach_init(void (*func)(void)) // ハードウェア初期化
     { func_init = func; };
     void  attach_tone(void (*func)(uint16_t freq, uint16_t tm, uint16_t vol))  // tone
@@ -63,19 +71,23 @@ class MML {
     { func_notone = func; }
     void  attach_debug(void (*func)(uint8_t c))  // putc
     { func_putc = func; };
-    
-    void init(void (*f1)(void),void (*f2)(uint16_t freq, uint16_t tm, uint16_t vol),void (*f3)(void), void (*f4)(uint8_t c) = 0) 
+*/  
+    void init(
+       void (*f1)(void), 
+       void (*f2)(uint16_t freq, uint16_t tm, uint16_t vol),
+       void (*f3)(void), 
+       void (*f4)(uint8_t c) = 0    ) 
     { func_init = f1; func_tone = f2; func_notone = f3; func_putc = f4; init(); }; 
 
-    void init();   
+
     void setText(const char* text)  // MML文の登録
     { mml_text = (char *)text; };
 
     void tempo(int16_t tempo);
 
-    void playTick(uint8_t flgTick = 1);
+    void playTick(uint8_t flgTick = true);
     void play(uint8_t mode = 0);
-    void playBGM() {play(1);};
+    void playBGM(uint8_t mode = 0) {play(MML_BGM|mode);};
     uint8_t isBGMPlay()  {return ((playMode == 2) && flgRun); };
     uint8_t isPlay()  {return ((playMode == 1) && flgRun); };
     uint8_t available(); 

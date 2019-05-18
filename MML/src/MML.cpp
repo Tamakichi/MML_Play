@@ -36,7 +36,7 @@ const PROGMEM  uint16_t mml_scale[] = {
 #define MML_AS_BASE 10
 #define MML_B_BASE  11
 
-const uint8_t mml_scaleBase[] = {
+const PROGMEM  uint8_t mml_scaleBase[] = {
   MML_A_BASE, MML_B_BASE, MML_C_BASE, MML_D_BASE, MML_E_BASE, MML_F_BASE, MML_G_BASE,
 };
 
@@ -128,9 +128,9 @@ int16_t MML::getParam() {
 //        1ビット  0:先頭から            1:中断途中から
 //        2ビット  0:リピートなし        1:リピートあり (バックグラウンド演奏時のみ）
 void MML::play(uint8_t mode) {  
-  if (!(mode & 2))  mml_ptr = mml_text;         // 先頭からの演奏
-  repeat =  ((mode & 4) && (mode & 1)) ? 1:0;   // リピートモード
-  if ( !(mode & 1) ) {
+  if (!(mode & MML_RESUME))  mml_ptr = mml_text;              // 先頭からの演奏
+  repeat =  ((mode & MML_REPEAT) && (mode & MML_BGM)) ? 1:0;  // リピートモード
+  if ( !(mode & MML_BGM) ) {
     playMode = 1;
     flgRun = 1;
     playTick(0);  // フォアグランド演奏
@@ -188,7 +188,7 @@ void MML::playTick(uint8_t flgTick) {
         flgR = 1;
         mml_ptr++;
       } else {
-        scale = pgm_read_byte(&mml_scaleBase[c-'A']); // 音階コードの取得        
+        scale = pgm_read_byte(mml_scaleBase + c-'A'); // 音階コードの取得   
         mml_ptr++;
         if (*mml_ptr == '#' || *mml_ptr == '+') {
           //** 個別の音階半音上げ # or +
@@ -262,8 +262,7 @@ void MML::playTick(uint8_t flgTick) {
     } else if (c == 'L') {  // グローバルな長さの指定     
       //**** 省略時長さ指定 L[n][.] 
       mml_ptr++;
-      //mml_ptr = getParamLen(mml_ptr, tmpLen);
-      if ( (tmpLen = getParamLen() ) < 0)
+       if ( (tmpLen = getParamLen() ) < 0)
         break;
       if (tmpLen > 0) {
         local_len = tmpLen;
