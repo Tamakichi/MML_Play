@@ -475,8 +475,8 @@ void dev_notone() {
 // バックグラウンド演奏割り込み
 void handle_timer() {
   if (mml.isBGMPlay())
-    if (mml.available()) 
-      mml.playTick();    
+    if (mml.available())
+      mml.playTick();
 }
 
 // 猫ふんじゃった
@@ -513,14 +513,14 @@ void setup() {
   pinMode(StopBtn,INPUT_PULLUP);
   attachInterrupt(StopBtn, OnStopPkay, FALLING);
   
-  Serial.println("MML library sample. Hit any key to start.");    
+  Serial.println("MML library sample. Hit any key to start.");
   
   // キーボード入力待ち
   while (!Serial.available())
     continue;
   
   // MML初期化、デバイス依存関数の登録
-  mml.init(dev_toneInit, dev_tone, dev_notone, debug); 
+  mml.init(dev_toneInit, dev_tone, dev_notone, debug);
 
   // フォアグランド演奏
   Serial.println("Now foreground playing ..");
@@ -534,15 +534,15 @@ void setup() {
 
   delay(1000);
 
-  // バックグラウンド演奏 
+  // バックグラウンド演奏
   Serial.println();
   Serial.println("Now Background playing ..");
-  Serial.println("Menu: e:end, r:resume,  s:start"); 
+  Serial.println("Menu: e:end, r:resume,  s:start");
   mml.playBGM();
 }
 
 void loop() {
-   // バックグラウンド演奏中の操作 
+   // バックグラウンド演奏中の操作
   if (Serial.available()) {
     uint8_t c = Serial.read();
     if (c == 'e' || c== 'E') {        // 演奏停止
@@ -600,8 +600,8 @@ void dev_notone() {
 // バックグラウンド演奏割り込み
 void handle_timer() {
   if (mml.isBGMPlay())
-    if (mml.available()) 
-      mml.playTick();    
+    if (mml.available())
+      mml.playTick();
 }
 
 // 猫ふんじゃった
@@ -637,14 +637,14 @@ void setup() {
   pinMode(PB8,INPUT_PULLUP);
   attachInterrupt(PB8, OnStopPkay, FALLING);
 
-  Serial.println("MML library sample. Hit any key to start.");    
-      
+  Serial.println("MML library sample. Hit any key to start.");
+
   // キーボード入力待ち
   while (!Serial.available())
     continue;
   
   // MML初期化、デバイス依存関数の登録
-  mml.init(dev_toneInit, dev_tone, dev_notone, debug); 
+  mml.init(dev_toneInit, dev_tone, dev_notone, debug);
 
   // フォアグランド演奏
   Serial.println("Now foreground playing ..");
@@ -659,15 +659,15 @@ void setup() {
 
   delay(1000);
 
-  // バックグラウンド演奏 
+  // バックグラウンド演奏
   Serial.println();
   Serial.println("Now Background playing ..");
-  Serial.println("Menu: e:end, r:resume,  s:start"); 
+  Serial.println("Menu: e:end, r:resume,  s:start");
   mml.playBGM();
 }
 
 void loop() {
-   // バックグラウンド演奏中の操作 
+   // バックグラウンド演奏中の操作
   if (Serial.available()) {
     uint8_t c = Serial.read();
     if (c == 'e' || c== 'E') {        // 演奏停止
@@ -682,10 +682,9 @@ void loop() {
   }
 }
 ```
+
 #### MML_Play_STM32Ex.ino
 
 Blue Pillボード（STM32F103C8T6搭載)用のサンプルプログラムです。
 Arduino Uno版と同等の機能ですが、tone()関数は音の大きさ指定対応のものに置き換えています。  
 詳細については、スケッチを参照して下さい。  
-
-
