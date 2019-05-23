@@ -1,15 +1,13 @@
-MML		KEYWORD1	
+MML 		KEYWORD1	
 init		KEYWORD2
 setText		KEYWORD2
 tempo		KEYWORD2
-playTick		KEYWORD2
+playTick	KEYWORD2
 play		KEYWORD2
 playBGM		KEYWORD2
-available		KEYWORD2
+available	KEYWORD2
 stop		KEYWORD2
 resume		KEYWORD2
 isPlay		KEYWORD2
- isBGMPlay	KEYWORD2
-
-
-
+isBGMPlay	KEYWORD2
+isError 	KEYWORD2

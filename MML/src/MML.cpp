@@ -1,6 +1,7 @@
 //
 // MMLクラスライブラリ V1.0
 // 作成日 2019/03/24 by たま吉さん
+// 最終更新日 2019/05/23 by たま吉さん
 //
 
 #include "MML.h"
@@ -70,6 +71,8 @@ void  MML::debug(uint8_t c) {
 
 //  演奏キューチェック
 uint8_t MML::available() {
+  if (!flgRun)
+    return 0;
   if (playduration) {
     if ( endTick < millis() ) {
         if (!flgR) notone();
@@ -151,6 +154,7 @@ void MML::playTick(uint8_t flgTick) {
   uint8_t flgExtlen = 0;
   uint8_t c;                         // 1文字取り出し用
   int16_t tmpLen;                    // 音の長さ評価用
+  err = 0; 
 
   // MMLの評価
   while(*mml_ptr) {
@@ -161,7 +165,6 @@ void MML::playTick(uint8_t flgTick) {
 
     // 中断の判定
     if (!flgRun) {
-      err = 0; 
       break;
     }
   
@@ -325,7 +328,7 @@ void MML::playTick(uint8_t flgTick) {
       break;
     }
   }
-  if ( !*mml_ptr && available() ) {
+  if ( !*mml_ptr && available() || isError() ) {
     flgRun = 0;    // 演奏終了
     playMode = 0;
   }
