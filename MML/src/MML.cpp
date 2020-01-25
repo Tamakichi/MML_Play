@@ -1,7 +1,8 @@
 //
 // MMLクラスライブラリ V1.0
-// 作成日 2019/03/24 by たま吉さん
-// 最終更新日 2019/05/23 by たま吉さん
+// 作成  2019/03/24 by たま吉さん
+// 修正  2019/05/23,不具合対応
+// 修正  2020/01/19,M5Stackでのコンパイルエラー対応
 //
 
 #include "MML.h"
@@ -328,7 +329,7 @@ void MML::playTick(uint8_t flgTick) {
       break;
     }
   }
-  if ( !*mml_ptr && available() || isError() ) {
+  if ((!*mml_ptr && available()) || isError() ) {
     flgRun = 0;    // 演奏終了
     playMode = 0;
   }
