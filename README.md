@@ -1,6 +1,6 @@
 # MML_Play
 
-Arduino、Arduino STM32 MML文演奏クラスライブラリ  
+Arduino、Arduino STM32、ESP32(M5Stack)用 MML文演奏クラスライブラリ  
 
 ## ライブラリ名称
 
@@ -593,4 +593,10 @@ void loop() {
 
 Blue Pillボード（STM32F103C8T6搭載)用のサンプルプログラムです。  
 Arduino Uno版と同等の機能ですが、tone()関数は音の大きさ指定対応版に置き換えています。  
+詳細については、スケッチを参照して下さい。  
+
+#### MML_Play_M5Stack.ino
+
+M5Stack（ESP32搭載)用のサンプルプログラムです。  
+tone()は爆音対策を行ったオリジナルの関数を使って鳴らしています。  
 詳細については、スケッチを参照して下さい。  
