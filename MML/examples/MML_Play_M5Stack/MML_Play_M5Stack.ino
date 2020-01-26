@@ -37,9 +37,7 @@ void dev_tone(uint16_t freq, uint16_t tm, uint16_t vol) {
 
 // 単音出力停止関数
 void dev_notone() {
-  //noTone(TonePin);
-  M5.Speaker.mute();
-
+  noToneEx();
 }
 
 // 猫ふんじゃった
